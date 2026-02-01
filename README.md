@@ -234,14 +234,26 @@ interface BinaryStatus {
 | `PJ_SKIP_INSTALL` | Skip binary download during npm install |
 | `PJ_INSTALL_BINARY` | Force binary download in CI environments |
 
+## Version Compatibility
+
+This package's version is aligned with the pj CLI version:
+
+- **Major.Minor version is pinned**: `@joe-sh/pj@1.4.x` is compatible with `pj 1.4.x`
+- **Patch versions may differ**: This package may release patches independently from the pj CLI for bug fixes in the TypeScript wrapper
+- **Auto-updates within range**: The installer will automatically download the highest compatible pj version within the major.minor range
+
+For example:
+- `@joe-sh/pj@1.4.0` can install `pj 1.4.0`, `1.4.1`, or `1.4.2`
+- When `pj 1.5.0` is released, you'll need to update to `@joe-sh/pj@1.5.x`
+
 ## Binary Resolution Order
 
 The package looks for the pj binary in this order:
 
 1. `PJ_BINARY_PATH` environment variable
-2. Globally installed `pj` in PATH
-3. Cached binary in `~/.cache/pj-node/`
-4. Downloads from GitHub releases
+2. Globally installed `pj` in PATH (if version-compatible)
+3. Cached binary in `~/.cache/pj-node/` (if version-compatible)
+4. Downloads from GitHub releases (highest compatible version)
 
 ## Requirements
 

@@ -15,15 +15,21 @@ import type {
 } from "../api/types.js";
 import { PjBinaryError } from "../api/types.js";
 import {
+  RELEASES_URL,
   LATEST_RELEASE_URL,
   USER_AGENT,
   HTTP_TIMEOUT,
   UPDATE_CHECK_INTERVAL_DAYS,
+  PJ_TARGET_VERSION,
   getBinaryCacheDir,
   getBinaryName,
   getMetadataPath,
 } from "./constants.js";
 import { detectPlatform, getAssetFilename } from "./platform.js";
+import {
+  isVersionCompatible,
+  findHighestCompatibleVersion,
+} from "./version.js";
 
 interface CacheMetadata {
   version: string;
@@ -130,12 +136,14 @@ export class BinaryManager {
   }
 
   /**
-   * Download and install the pj binary
+   * Download and install the pj binary.
+   * If no specific version is requested, downloads the highest compatible version
+   * within the target major.minor range.
    */
   async downloadBinary(options?: BinaryOptions): Promise<string> {
     const release = options?.version
       ? await this.getRelease(options.version)
-      : await this.getLatestRelease();
+      : await this.getCompatibleRelease();
 
     const platform = detectPlatform();
     const assetName = getAssetFilename(release.version, platform);
@@ -191,13 +199,13 @@ export class BinaryManager {
   }
 
   /**
-   * Update the binary to the latest version
+   * Update the binary to the highest compatible version within the target range.
    */
   async updateBinary(options?: BinaryOptions): Promise<string> {
-    const latest = await this.getLatestRelease();
+    const compatible = await this.getCompatibleRelease();
     const metadata = await this.getMetadata();
 
-    if (metadata?.version === latest.version && !options?.force) {
+    if (metadata?.version === compatible.version && !options?.force) {
       // Already up to date, just update the check timestamp
       await this.saveMetadata({
         ...metadata,
@@ -209,7 +217,10 @@ export class BinaryManager {
       }
     }
 
-    return await this.downloadBinary({ ...options, version: latest.version });
+    return await this.downloadBinary({
+      ...options,
+      version: compatible.version,
+    });
   }
 
   /**
@@ -243,51 +254,71 @@ export class BinaryManager {
   }
 
   /**
-   * Find the globally installed pj binary
+   * Find the globally installed pj binary.
+   * Only returns the binary if it's version-compatible with our target.
    */
   private async findGlobalBinary(): Promise<string | null> {
     // execa does not use shell by default, safe from command injection
+    let binaryPath: string | null = null;
+
     try {
       const result = await execa("which", ["pj"], { timeout: 5000 });
-      const binaryPath = result.stdout.trim();
-      if (binaryPath && (await this.isValidBinary(binaryPath))) {
-        return binaryPath;
-      }
+      binaryPath = result.stdout.trim();
     } catch {
       // which failed or binary not found
     }
 
     // On Windows, try where
-    if (process.platform === "win32") {
+    if (!binaryPath && process.platform === "win32") {
       try {
         const result = await execa("where", ["pj"], { timeout: 5000 });
-        const binaryPath = result.stdout.trim().split("\n")[0];
-        if (binaryPath && (await this.isValidBinary(binaryPath))) {
-          return binaryPath;
-        }
+        binaryPath = result.stdout.trim().split("\n")[0] ?? null;
       } catch {
         // where failed or binary not found
       }
     }
 
-    return null;
+    if (!binaryPath) {
+      return null;
+    }
+
+    // Check if the binary is valid
+    if (!(await this.isValidBinary(binaryPath))) {
+      return null;
+    }
+
+    // Check if the version is compatible
+    const version = await this.getVersion(binaryPath);
+    if (!version || !isVersionCompatible(version, PJ_TARGET_VERSION)) {
+      return null;
+    }
+
+    return binaryPath;
   }
 
   /**
-   * Get the path to the cached binary if it exists
+   * Get the path to the cached binary if it exists and is version-compatible.
    */
   private async getCachedBinaryPath(): Promise<string | null> {
     if (this.cachedBinaryPath) {
       if (await this.isValidBinary(this.cachedBinaryPath)) {
-        return this.cachedBinaryPath;
+        // Verify version compatibility
+        const version = await this.getVersion(this.cachedBinaryPath);
+        if (version && isVersionCompatible(version, PJ_TARGET_VERSION)) {
+          return this.cachedBinaryPath;
+        }
       }
       this.cachedBinaryPath = null;
     }
 
     const binaryPath = path.join(getBinaryCacheDir(), getBinaryName());
     if (await this.isValidBinary(binaryPath)) {
-      this.cachedBinaryPath = binaryPath;
-      return binaryPath;
+      // Verify version compatibility
+      const version = await this.getVersion(binaryPath);
+      if (version && isVersionCompatible(version, PJ_TARGET_VERSION)) {
+        this.cachedBinaryPath = binaryPath;
+        return binaryPath;
+      }
     }
 
     return null;
@@ -329,6 +360,70 @@ export class BinaryManager {
     const metadataPath = getMetadataPath();
     await fs.mkdir(path.dirname(metadataPath), { recursive: true });
     await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+  }
+
+  /**
+   * Get all releases from GitHub (up to 100 most recent)
+   */
+  async getAllReleases(): Promise<GithubRelease[]> {
+    const response = await fetch(`${RELEASES_URL}?per_page=100`, {
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+        "User-Agent": USER_AGENT,
+      },
+      signal: AbortSignal.timeout(HTTP_TIMEOUT),
+    });
+
+    if (!response.ok) {
+      throw new PjBinaryError(
+        `Failed to fetch releases: ${String(response.status)} ${response.statusText}`
+      );
+    }
+
+    const data = (await response.json()) as {
+      tag_name: string;
+      name: string;
+      prerelease: boolean;
+      assets: {
+        name: string;
+        browser_download_url: string;
+        size: number;
+        content_type: string;
+      }[];
+    }[];
+
+    return data
+      .filter((release) => !release.prerelease)
+      .map((release) => this.parseRelease(release));
+  }
+
+  /**
+   * Get the highest compatible release within the target major.minor range.
+   */
+  async getCompatibleRelease(): Promise<GithubRelease> {
+    const releases = await this.getAllReleases();
+    const versions = releases.map((r) => r.version);
+
+    const compatibleVersion = findHighestCompatibleVersion(
+      versions,
+      PJ_TARGET_VERSION
+    );
+
+    if (!compatibleVersion) {
+      throw new PjBinaryError(
+        `No compatible pj release found for version range ${PJ_TARGET_VERSION}.x. ` +
+          `Available versions: ${versions.join(", ")}`
+      );
+    }
+
+    const release = releases.find((r) => r.version === compatibleVersion);
+    if (!release) {
+      throw new PjBinaryError(
+        `Failed to find release for version ${compatibleVersion}`
+      );
+    }
+
+    return release;
   }
 
   /**

@@ -1,6 +1,16 @@
 import * as path from "node:path";
 import * as os from "node:os";
 
+/**
+ * Target pj version (major.minor) that this package is compatible with.
+ * The installer will accept any patch version within this range.
+ * Example: "1.4" means pj 1.4.0, 1.4.1, 1.4.2, etc. are all compatible.
+ *
+ * IMPORTANT: When pj releases a new minor version (e.g., 1.5.0),
+ * this package must also release a new minor version to match.
+ */
+export const PJ_TARGET_VERSION = "1.4";
+
 /** GitHub repository owner */
 export const GITHUB_OWNER = "josephschmitt";
 

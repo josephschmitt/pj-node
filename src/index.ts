@@ -51,10 +51,21 @@ export { detectPlatform, getAssetFilename, isPlatformSupported } from "./binary/
 export {
   GITHUB_OWNER,
   GITHUB_REPO,
+  PJ_TARGET_VERSION,
   getBinaryName,
   getCacheDir,
   getBinaryCacheDir,
 } from "./binary/constants.js";
+
+// Version utilities
+export {
+  parseVersion,
+  parseTargetVersion,
+  isVersionCompatible,
+  compareVersions,
+  findHighestCompatibleVersion,
+  type ParsedVersion,
+} from "./binary/version.js";
 
 // Types
 export type {
