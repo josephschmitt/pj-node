@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+
+/**
+ * CLI wrapper for pj
+ *
+ * This script ensures the pj binary is available and executes it with the
+ * provided arguments. It acts as a pass-through to the actual pj binary.
+ */
+
+import { spawn } from "node:child_process";
+import { getBinaryManager } from "../dist/index.js";
+
+async function main() {
+  try {
+    const manager = getBinaryManager();
+    const binaryPath = await manager.getBinaryPath();
+
+    // Pass through all arguments to pj
+    const args = process.argv.slice(2);
+
+    const child = spawn(binaryPath, args, {
+      stdio: "inherit",
+      shell: false,
+    });
+
+    child.on("error", (error) => {
+      console.error(`Failed to start pj: ${error.message}`);
+      process.exit(1);
+    });
+
+    child.on("close", (code) => {
+      process.exit(code ?? 0);
+    });
+  } catch (error) {
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    );
+    process.exit(1);
+  }
+}
+
+main();

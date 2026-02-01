@@ -1,0 +1,39 @@
+# Source files (dist is published instead)
+src/
+test/
+tsconfig.json
+tsup.config.ts
+
+# Development files
+.github/
+.eslintrc*
+eslint.config.*
+.prettierrc*
+.editorconfig
+*.test.ts
+*.spec.ts
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+
+# Git
+.git/
+.gitignore
+
+# Cache
+.cache/
+*.tsbuildinfo
+.pj-cache/

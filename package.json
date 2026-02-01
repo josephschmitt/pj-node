@@ -1,0 +1,74 @@
+{
+  "name": "@joe-sh/pj",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fast project finder - TypeScript API and binary installer for pj CLI",
+  "keywords": [
+    "project",
+    "finder",
+    "cli",
+    "workspace",
+    "development",
+    "pj"
+  ],
+  "author": "Joseph Schmitt",
+  "license": "MIT",
+  "homepage": "https://github.com/josephschmitt/pj-node",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/josephschmitt/pj-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/josephschmitt/pj-node/issues"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "pj": "./bin/pj"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "scripts/postinstall.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm run test",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "execa": "^9.5.2",
+    "tar": "^7.4.3",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "eslint": "^9.19.0",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.23.0",
+    "vitest": "^3.0.5"
+  }
+}
