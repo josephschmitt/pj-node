@@ -1,0 +1,108 @@
+name: Sync pj Version
+
+on:
+  repository_dispatch:
+    types: [pj-release]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Parse version from dispatch
+        id: parse
+        env:
+          PJ_VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          # Remove v prefix if present
+          VERSION="${PJ_VERSION#v}"
+
+          # Validate version format (must be semver-like)
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+
+          # Extract major.minor
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+
+          echo "full_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major_minor=$MAJOR_MINOR" >> $GITHUB_OUTPUT
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+
+      - name: Get current target version
+        id: current
+        run: |
+          CURRENT=$(grep -oP 'PJ_TARGET_VERSION = "\K[^"]+' src/binary/constants.ts)
+          echo "target_version=$CURRENT" >> $GITHUB_OUTPUT
+
+      - name: Check if update needed
+        id: check
+        env:
+          NEW_MAJOR_MINOR: ${{ steps.parse.outputs.major_minor }}
+          CURRENT: ${{ steps.current.outputs.target_version }}
+        run: |
+          if [ "$NEW_MAJOR_MINOR" != "$CURRENT" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "New pj version $NEW_MAJOR_MINOR differs from current target $CURRENT"
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "pj version $NEW_MAJOR_MINOR matches current target, no update needed"
+          fi
+
+      - name: Update version files
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          NEW_TARGET: ${{ steps.parse.outputs.major_minor }}
+        run: |
+          NEW_VERSION="${NEW_TARGET}.0"
+
+          # Update PJ_TARGET_VERSION in constants.ts
+          sed -i "s/PJ_TARGET_VERSION = \"[^\"]*\"/PJ_TARGET_VERSION = \"$NEW_TARGET\"/" src/binary/constants.ts
+
+          # Update package.json version
+          npm version "$NEW_VERSION" --no-git-tag-version
+
+      - name: Create Pull Request
+        if: steps.check.outputs.needs_update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            Bump version for pj ${{ steps.parse.outputs.full_version }}
+
+            Update PJ_TARGET_VERSION to ${{ steps.parse.outputs.major_minor }}
+            Update package version to ${{ steps.parse.outputs.major_minor }}.0
+
+            Triggered by pj release ${{ github.event.client_payload.version }}
+          branch: sync-pj-${{ steps.parse.outputs.major_minor }}
+          delete-branch: true
+          title: "Sync with pj ${{ steps.parse.outputs.major_minor }}"
+          body: |
+            This PR was automatically created in response to pj releasing version `${{ steps.parse.outputs.full_version }}`.
+
+            ## Changes
+            - Updated `PJ_TARGET_VERSION` to `${{ steps.parse.outputs.major_minor }}`
+            - Updated package version to `${{ steps.parse.outputs.major_minor }}.0`
+
+            ## Checklist
+            - [ ] Review the changes
+            - [ ] Merge when ready
+            - [ ] Publish to npm after merge
+          labels: |
+            automated
+            version-sync
