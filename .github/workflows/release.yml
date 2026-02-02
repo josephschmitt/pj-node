@@ -46,7 +46,7 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PJ_NODE_PAT }}
           commit-message: "chore: release ${{ steps.bump.outputs.version }}"
           branch: release/${{ steps.bump.outputs.version }}
           delete-branch: true
