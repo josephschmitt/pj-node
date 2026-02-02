@@ -117,7 +117,10 @@ export async function executePj(
 
   try {
     // execa does not use shell by default, safe from command injection
+    // stdin: 'ignore' prevents hanging when called from Node.js environments
+    // that inherit stdin from parent process (e.g., Raycast, VS Code extensions)
     const result = await execa(binaryPath, args, {
+      stdin: "ignore",
       timeout: 60000, // 1 minute timeout
       ...execaOptions,
     });
