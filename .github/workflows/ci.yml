@@ -36,8 +36,8 @@ jobs:
   auto-merge:
     needs: test
     runs-on: ubuntu-latest
-    # Only auto-merge automated PRs (release PRs and pj-sync PRs)
-    if: startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'sync-pj-')
+    # Only auto-merge release PRs (patch bumps)
+    if: startsWith(github.head_ref, 'release/')
     steps:
       - uses: actions/checkout@v4
 
