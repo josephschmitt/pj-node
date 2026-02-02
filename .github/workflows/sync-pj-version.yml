@@ -99,10 +99,7 @@ jobs:
             - Updated `PJ_TARGET_VERSION` to `${{ steps.parse.outputs.major_minor }}`
             - Updated package version to `${{ steps.parse.outputs.major_minor }}.0`
 
-            ## Checklist
-            - [ ] Review the changes
-            - [ ] Merge when ready
-            - [ ] Publish to npm after merge
+            CI will run automatically. If tests pass, this PR will auto-merge and publish to npm.
           labels: |
             automated
             version-sync
