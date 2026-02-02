@@ -60,10 +60,9 @@ This repo uses conventional commits. Due to the version strategy (major.minor tr
 ## CI/CD Automation
 
 Fully automated publishing pipeline:
-1. Patch-level commits merged → Release workflow creates version bump PR
-2. pj releases new version → Sync workflow creates version PR
-3. Release PRs auto-merge when CI passes
-4. Publish workflow publishes to npm with OIDC provenance
+1. Patch-level commits merged → Release workflow creates version bump PR (auto-merges)
+2. pj releases new version → Sync workflow creates version PR (requires manual review)
+3. Publish workflow publishes to npm with OIDC provenance
 
 ## Pre-push Hook
 

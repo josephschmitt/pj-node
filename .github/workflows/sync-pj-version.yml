@@ -93,13 +93,15 @@ jobs:
           delete-branch: true
           title: "Sync with pj ${{ steps.parse.outputs.major_minor }}"
           body: |
-            This PR was automatically created in response to pj releasing version `${{ steps.parse.outputs.full_version }}`.
+            @josephschmitt This PR was automatically created in response to pj releasing version `${{ steps.parse.outputs.full_version }}`.
 
             ## Changes
             - Updated `PJ_TARGET_VERSION` to `${{ steps.parse.outputs.major_minor }}`
             - Updated package version to `${{ steps.parse.outputs.major_minor }}.0`
 
-            CI will run automatically. If tests pass, this PR will auto-merge and publish to npm.
+            ## Action Required
+            Please review this PR and update the TypeScript API if needed to support new pj features.
           labels: |
             automated
             version-sync
+          assignees: josephschmitt
