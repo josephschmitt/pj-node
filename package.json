@@ -3,7 +3,8 @@
   "version": "1.5.1",
   "type": "module",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "description": "Fast project finder - TypeScript API and binary installer for pj CLI",
   "keywords": [
