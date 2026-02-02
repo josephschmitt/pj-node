@@ -18,7 +18,38 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Check if commit is patch-level
+        id: conventional
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          FIRST_LINE=$(echo "$COMMIT_MSG" | head -n 1)
+
+          # Skip if commit has breaking change indicator
+          if echo "$FIRST_LINE" | grep -qE '^[a-z]+(\(.+\))?!:'; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping: breaking change commit"
+            exit 0
+          fi
+
+          # Skip if commit is a feature (minor version)
+          if echo "$FIRST_LINE" | grep -qE '^feat(\(.+\))?:'; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping: feat commit (minor version)"
+            exit 0
+          fi
+
+          # Only proceed if commit is a patch-level type
+          if echo "$FIRST_LINE" | grep -qE '^(fix|chore|docs|style|refactor|perf|test|build|ci)(\(.+\))?:'; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Patch-level commit detected, proceeding with release"
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping: commit type not in patch-level list"
+          fi
+
       - name: Check if version already changed
+        if: steps.conventional.outputs.skip == 'false'
         id: check
         run: |
           OLD=$(git show HEAD~1:package.json | jq -r '.version' 2>/dev/null || echo "0.0.0")
@@ -31,19 +62,19 @@ jobs:
           fi
 
       - uses: actions/setup-node@v4
-        if: steps.check.outputs.skip == 'false'
+        if: steps.conventional.outputs.skip == 'false' && steps.check.outputs.skip == 'false'
         with:
           node-version: "20"
 
       - name: Bump patch version
-        if: steps.check.outputs.skip == 'false'
+        if: steps.conventional.outputs.skip == 'false' && steps.check.outputs.skip == 'false'
         id: bump
         run: |
           NEW_VERSION=$(npm version patch --no-git-tag-version)
           echo "version=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
-        if: steps.check.outputs.skip == 'false'
+        if: steps.conventional.outputs.skip == 'false' && steps.check.outputs.skip == 'false'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PJ_NODE_PAT }}

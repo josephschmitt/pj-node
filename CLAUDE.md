@@ -44,10 +44,23 @@ Uses strict TypeScript with extra strictness flags:
 - `exactOptionalPropertyTypes: true` - Optional properties can't be `undefined` explicitly
 - `noUncheckedIndexedAccess: true` - Array/object index access returns `T | undefined`
 
+## Commit Convention
+
+This repo uses conventional commits. Due to the version strategy (major.minor tracks pj CLI), only patch-level commits trigger automatic releases:
+
+**Triggers release PR (patch bump):**
+- `fix:` - Bug fixes
+- `chore:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, `build:`, `ci:` - Other patch-level changes
+
+**Does NOT trigger release PR:**
+- `feat:` - New features (minor version, reserved for pj CLI updates)
+- `type!:` or `BREAKING CHANGE` - Breaking changes (major version, reserved for pj CLI updates)
+- Any other prefix (e.g., `maint:`) - No automatic release
+
 ## CI/CD Automation
 
 Fully automated publishing pipeline:
-1. Code changes merged → Release workflow creates version bump PR
+1. Patch-level commits merged → Release workflow creates version bump PR
 2. pj releases new version → Sync workflow creates version PR
 3. Release PRs auto-merge when CI passes
 4. Publish workflow publishes to npm with OIDC provenance
