@@ -236,15 +236,23 @@ interface BinaryStatus {
 
 ## Version Compatibility
 
-This package's version is aligned with the pj CLI version:
+This package tracks the [pj CLI](https://github.com/josephschmitt/pj) version using a **major.minor pinning** strategy:
 
-- **Major.Minor version is pinned**: `@joe-sh/pj@1.4.x` is compatible with `pj 1.4.x`
-- **Patch versions may differ**: This package may release patches independently from the pj CLI for bug fixes in the TypeScript wrapper
-- **Auto-updates within range**: The installer will automatically download the highest compatible pj version within the major.minor range
+| This package | Compatible pj versions |
+|--------------|------------------------|
+| `1.4.x`      | `1.4.0`, `1.4.1`, `1.4.2`, ... |
+| `1.5.x`      | `1.5.0`, `1.5.1`, `1.5.2`, ... |
 
-For example:
-- `@joe-sh/pj@1.4.0` can install `pj 1.4.0`, `1.4.1`, or `1.4.2`
-- When `pj 1.5.0` is released, you'll need to update to `@joe-sh/pj@1.5.x`
+**How it works:**
+
+- This package stays in sync with pj's major.minor version
+- Patch versions (the third number) are independent — patches to this package are for TypeScript wrapper bug fixes, not pj CLI changes
+- When you install or update, the package automatically downloads the **latest compatible pj patch** within your major.minor range
+
+**What this means for you:**
+
+- `@joe-sh/pj@1.4.2` will install the latest `pj 1.4.x` (e.g., `1.4.5` if available)
+- When pj `1.5.0` is released, upgrade to `@joe-sh/pj@1.5.x` to get the new features
 
 ## Binary Resolution Order
 
