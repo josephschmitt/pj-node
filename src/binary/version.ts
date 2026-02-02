@@ -18,7 +18,7 @@ export function parseVersion(version: string): ParsedVersion | null {
   const normalized = version.replace(/^v/, "");
   const match = /^(\d+)\.(\d+)\.(\d+)/.exec(normalized);
 
-  if (!match || !match[1] || !match[2] || !match[3]) {
+  if (!match?.[1] || !match[2] || !match[3]) {
     return null;
   }
 
@@ -37,7 +37,7 @@ export function parseTargetVersion(
   target: string
 ): { major: number; minor: number } | null {
   const match = /^(\d+)\.(\d+)$/.exec(target);
-  if (!match || !match[1] || !match[2]) {
+  if (!match?.[1] || !match[2]) {
     return null;
   }
 
