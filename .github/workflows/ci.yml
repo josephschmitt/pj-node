@@ -36,8 +36,8 @@ jobs:
   auto-merge:
     needs: test
     runs-on: ubuntu-latest
-    # Only auto-merge bot PRs (release PRs and pj-sync PRs)
-    if: github.actor == 'github-actions[bot]'
+    # Only auto-merge automated PRs (release PRs and pj-sync PRs)
+    if: startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'sync-pj-')
     steps:
       - uses: actions/checkout@v4
 
