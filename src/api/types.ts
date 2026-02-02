@@ -60,6 +60,8 @@ export interface PjConfig {
   noNested: boolean;
   /** Icon mappings for markers */
   icons: Record<string, string>;
+  /** Priority mappings for markers (higher = more specific) */
+  priorities: Record<string, number>;
 }
 
 /**

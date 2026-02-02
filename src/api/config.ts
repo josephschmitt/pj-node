@@ -22,11 +22,24 @@ export const DEFAULT_CONFIG: PjConfig = {
     "package.json",
     "Cargo.toml",
     "pyproject.toml",
+    "Makefile",
+    "flake.nix",
     ".vscode",
     ".idea",
-    "Makefile",
+    ".fleet",
+    ".project",
+    ".zed",
+    "Dockerfile",
   ],
-  exclude: ["node_modules", "vendor", ".cache", "target", "dist", "build"],
+  exclude: [
+    "node_modules",
+    ".terraform",
+    "vendor",
+    ".git",
+    "target",
+    "dist",
+    "build",
+  ],
   maxDepth: 3,
   cacheTTL: 300,
   noIgnore: false,
@@ -40,6 +53,22 @@ export const DEFAULT_CONFIG: PjConfig = {
     ".vscode": "\ue70c ", //
     ".idea": "\ue7b5 ", //
     Makefile: "\ue779 ", //
+    Dockerfile: "\ue7b0",
+  },
+  priorities: {
+    ".git": 1,
+    "go.mod": 10,
+    "package.json": 10,
+    "Cargo.toml": 10,
+    "pyproject.toml": 10,
+    Makefile: 1,
+    "flake.nix": 10,
+    ".vscode": 5,
+    ".idea": 5,
+    ".fleet": 5,
+    ".project": 5,
+    ".zed": 5,
+    Dockerfile: 7,
   },
 };
 
@@ -88,7 +117,10 @@ export async function saveConfig(
   if (config.cacheTTL !== undefined) rawConfig.cache_ttl = config.cacheTTL;
   if (config.noIgnore !== undefined) rawConfig.no_ignore = config.noIgnore;
   if (config.noNested !== undefined) rawConfig.no_nested = config.noNested;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
   if (config.icons !== undefined) rawConfig.icons = config.icons;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
+  if (config.priorities !== undefined) rawConfig.priorities = config.priorities;
 
   const content = yaml.stringify(rawConfig, { indent: 2 });
 
@@ -118,32 +150,104 @@ export function getConfigPath(): string {
 }
 
 /**
+ * Raw marker config - can be a string or an object with marker, icon, and priority
+ */
+type RawMarker =
+  | string
+  | {
+      marker: string;
+      icon?: string;
+      priority?: number;
+    };
+
+/**
  * Raw config format as stored in YAML (snake_case)
  */
 interface RawConfig {
   paths?: string[];
-  markers?: string[];
+  markers?: RawMarker[];
   exclude?: string[];
   max_depth?: number;
   cache_ttl?: number;
   no_ignore?: boolean;
   no_nested?: boolean;
+  /** @deprecated Use the new markers format with icon field instead */
   icons?: Record<string, string>;
+  /** @deprecated Use the new markers format with priority field instead */
+  priorities?: Record<string, number>;
+}
+
+/**
+ * Parse raw markers into separate markers, icons, and priorities
+ */
+function parseRawMarkers(rawMarkers: RawMarker[]): {
+  markers: string[];
+  icons: Record<string, string>;
+  priorities: Record<string, number>;
+} {
+  const markers: string[] = [];
+  const icons: Record<string, string> = {};
+  const priorities: Record<string, number> = {};
+
+  for (const raw of rawMarkers) {
+    if (typeof raw === "string") {
+      markers.push(raw);
+    } else {
+      markers.push(raw.marker);
+      if (raw.icon !== undefined) {
+        icons[raw.marker] = raw.icon;
+      }
+      if (raw.priority !== undefined) {
+        priorities[raw.marker] = raw.priority;
+      }
+    }
+  }
+
+  return { markers, icons, priorities };
 }
 
 /**
  * Merge raw config with defaults
  */
 function mergeConfig(raw: Partial<RawConfig>): PjConfig {
+  // Parse markers from raw config if provided
+  let markers = DEFAULT_CONFIG.markers;
+  let parsedIcons: Record<string, string> = {};
+  let parsedPriorities: Record<string, number> = {};
+
+  if (raw.markers !== undefined) {
+    const parsed = parseRawMarkers(raw.markers);
+    markers = parsed.markers;
+    parsedIcons = parsed.icons;
+    parsedPriorities = parsed.priorities;
+  }
+
+  // Merge icons: defaults <- deprecated icons field <- new format icons
+  const icons = {
+    ...DEFAULT_CONFIG.icons,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
+    ...(raw.icons ?? {}),
+    ...parsedIcons,
+  };
+
+  // Merge priorities: defaults <- deprecated priorities field <- new format priorities
+  const priorities = {
+    ...DEFAULT_CONFIG.priorities,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
+    ...(raw.priorities ?? {}),
+    ...parsedPriorities,
+  };
+
   return {
     paths: raw.paths ?? DEFAULT_CONFIG.paths,
-    markers: raw.markers ?? DEFAULT_CONFIG.markers,
+    markers,
     exclude: raw.exclude ?? DEFAULT_CONFIG.exclude,
     maxDepth: raw.max_depth ?? DEFAULT_CONFIG.maxDepth,
     cacheTTL: raw.cache_ttl ?? DEFAULT_CONFIG.cacheTTL,
     noIgnore: raw.no_ignore ?? DEFAULT_CONFIG.noIgnore,
     noNested: raw.no_nested ?? DEFAULT_CONFIG.noNested,
-    icons: raw.icons ?? DEFAULT_CONFIG.icons,
+    icons,
+    priorities,
   };
 }
 
