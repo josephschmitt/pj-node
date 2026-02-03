@@ -67,11 +67,13 @@ describe("CLI Executor", () => {
   });
 
   describe("parseJsonOutput", () => {
-    it("should parse valid JSON output", () => {
-      const output = JSON.stringify([
-        { path: "/foo/bar", name: "bar", marker: ".git" },
-        { path: "/foo/baz", name: "baz", marker: "package.json", icon: " " },
-      ]);
+    it("should parse wrapped JSON output format", () => {
+      const output = JSON.stringify({
+        projects: [
+          { path: "/foo/bar", name: "bar", marker: ".git" },
+          { path: "/foo/baz", name: "baz", marker: "package.json", icon: " " },
+        ],
+      });
 
       const projects = parseJsonOutput(output);
 
@@ -92,13 +94,43 @@ describe("CLI Executor", () => {
       });
     });
 
+    it("should parse direct array format for backwards compatibility", () => {
+      const output = JSON.stringify([
+        { path: "/foo/bar", name: "bar", marker: ".git" },
+        { path: "/foo/baz", name: "baz", marker: "package.json", icon: " " },
+      ]);
+
+      const projects = parseJsonOutput(output);
+
+      expect(projects).toHaveLength(2);
+      expect(projects[0]).toEqual({
+        path: "/foo/bar",
+        name: "bar",
+        marker: ".git",
+        icon: undefined,
+        priority: undefined,
+      });
+    });
+
     it("should return empty array for empty output", () => {
       expect(parseJsonOutput("")).toEqual([]);
       expect(parseJsonOutput("   ")).toEqual([]);
     });
 
     it("should throw on invalid JSON", () => {
-      expect(() => parseJsonOutput("not json")).toThrow();
+      expect(() => parseJsonOutput("not json")).toThrow("Failed to parse pj output");
+    });
+
+    it("should throw on unexpected format (not array or wrapped object)", () => {
+      expect(() => parseJsonOutput(JSON.stringify({ invalid: "format" }))).toThrow(
+        "Unexpected pj output format"
+      );
+    });
+
+    it("should throw on non-object content", () => {
+      expect(() => parseJsonOutput(JSON.stringify("string"))).toThrow(
+        "Unexpected pj output format"
+      );
     });
   });
 });

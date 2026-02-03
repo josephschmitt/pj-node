@@ -72,6 +72,20 @@ export function buildArgs(options?: DiscoverOptions): string[] {
 }
 
 /**
+ * JSON structure returned by pj binary
+ */
+interface PjJsonProject {
+  path: string;
+  name: string;
+  marker: string;
+  icon?: string;
+}
+
+interface PjJsonOutput {
+  projects: PjJsonProject[];
+}
+
+/**
  * Parse JSON output from pj
  */
 export function parseJsonOutput(output: string): Project[] {
@@ -80,22 +94,28 @@ export function parseJsonOutput(output: string): Project[] {
   }
 
   try {
-    const parsed = JSON.parse(output) as {
-      path: string;
-      name: string;
-      marker: string;
-      icon?: string;
-      priority?: number;
-    }[];
+    const parsed = JSON.parse(output) as PjJsonOutput | PjJsonProject[];
 
-    return parsed.map((p) => ({
+    // Handle both wrapped format { "projects": [...] } and direct array format
+    const projects = Array.isArray(parsed) ? parsed : parsed.projects;
+
+    if (!Array.isArray(projects)) {
+      throw new PjExecutionError(
+        `Unexpected pj output format: expected projects array but got ${typeof parsed}`
+      );
+    }
+
+    return projects.map((p) => ({
       path: p.path,
       name: p.name,
       marker: p.marker,
       icon: p.icon,
-      priority: p.priority,
+      priority: undefined,  // not included in JSON output
     }));
   } catch (error) {
+    if (error instanceof PjExecutionError) {
+      throw error;
+    }
     throw new PjExecutionError(
       `Failed to parse pj output: ${error instanceof Error ? error.message : String(error)}`
     );
