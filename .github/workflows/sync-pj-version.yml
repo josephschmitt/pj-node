@@ -48,17 +48,30 @@ jobs:
         id: current
         run: |
           CURRENT=$(grep -oP 'PJ_TARGET_VERSION = "\K[^"]+' src/binary/constants.ts)
+          CURRENT_MAJOR=$(echo "$CURRENT" | cut -d. -f1)
           echo "target_version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "major=$CURRENT_MAJOR" >> $GITHUB_OUTPUT
 
       - name: Check if update needed
         id: check
         env:
           NEW_MAJOR_MINOR: ${{ steps.parse.outputs.major_minor }}
+          NEW_MAJOR: ${{ steps.parse.outputs.major }}
           CURRENT: ${{ steps.current.outputs.target_version }}
+          CURRENT_MAJOR: ${{ steps.current.outputs.major }}
         run: |
           if [ "$NEW_MAJOR_MINOR" != "$CURRENT" ]; then
             echo "needs_update=true" >> $GITHUB_OUTPUT
             echo "New pj version $NEW_MAJOR_MINOR differs from current target $CURRENT"
+
+            # Determine commit prefix based on version change type
+            if [ "$NEW_MAJOR" != "$CURRENT_MAJOR" ]; then
+              echo "prefix=feat!:" >> $GITHUB_OUTPUT
+              echo "Major version change detected, using breaking change prefix"
+            else
+              echo "prefix=feat:" >> $GITHUB_OUTPUT
+              echo "Minor version change detected, using feat prefix"
+            fi
           else
             echo "needs_update=false" >> $GITHUB_OUTPUT
             echo "pj version $NEW_MAJOR_MINOR matches current target, no update needed"
@@ -91,7 +104,7 @@ jobs:
             Triggered by pj release ${{ github.event.client_payload.version }}
           branch: sync-pj-${{ steps.parse.outputs.major_minor }}
           delete-branch: true
-          title: "Sync with pj ${{ steps.parse.outputs.major_minor }}"
+          title: "${{ steps.check.outputs.prefix }} release ${{ steps.parse.outputs.major_minor }}.0"
           body: |
             @josephschmitt This PR was automatically created in response to pj releasing version `${{ steps.parse.outputs.full_version }}`.
 
