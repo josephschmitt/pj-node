@@ -10,6 +10,8 @@ export interface Project {
   marker: string;
   /** Optional icon for the marker (Nerd Font) */
   icon: string | undefined;
+  /** Optional color name for the marker icon (e.g., "cyan", "bright-red") */
+  color: string | undefined;
   /** Priority of the marker (higher = more specific) */
   priority: number | undefined;
 }
@@ -60,6 +62,8 @@ export interface PjConfig {
   noNested: boolean;
   /** Icon mappings for markers */
   icons: Record<string, string>;
+  /** Color mappings for marker icons */
+  colors: Record<string, string>;
   /** Priority mappings for markers (higher = more specific) */
   priorities: Record<string, number>;
 }

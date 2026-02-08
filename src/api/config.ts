@@ -55,6 +55,21 @@ export const DEFAULT_CONFIG: PjConfig = {
     Makefile: "\ue779 ", //
     Dockerfile: "\ue7b0",
   },
+  colors: {
+    ".git": "bright-red",
+    "package.json": "green",
+    "go.mod": "cyan",
+    "Cargo.toml": "red",
+    "pyproject.toml": "yellow",
+    ".vscode": "blue",
+    ".idea": "magenta",
+    ".fleet": "magenta",
+    ".project": "blue",
+    ".zed": "blue",
+    Makefile: "white",
+    "flake.nix": "bright-blue",
+    Dockerfile: "cyan",
+  },
   priorities: {
     ".git": 1,
     "go.mod": 10,
@@ -120,6 +135,8 @@ export async function saveConfig(
   // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
   if (config.icons !== undefined) rawConfig.icons = config.icons;
   // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
+  if (config.colors !== undefined) rawConfig.colors = config.colors;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
   if (config.priorities !== undefined) rawConfig.priorities = config.priorities;
 
   const content = yaml.stringify(rawConfig, { indent: 2 });
@@ -157,6 +174,7 @@ type RawMarker =
   | {
       marker: string;
       icon?: string;
+      color?: string;
       priority?: number;
     };
 
@@ -173,6 +191,8 @@ interface RawConfig {
   no_nested?: boolean;
   /** @deprecated Use the new markers format with icon field instead */
   icons?: Record<string, string>;
+  /** @deprecated Use the new markers format with color field instead */
+  colors?: Record<string, string>;
   /** @deprecated Use the new markers format with priority field instead */
   priorities?: Record<string, number>;
 }
@@ -183,10 +203,12 @@ interface RawConfig {
 function parseRawMarkers(rawMarkers: RawMarker[]): {
   markers: string[];
   icons: Record<string, string>;
+  colors: Record<string, string>;
   priorities: Record<string, number>;
 } {
   const markers: string[] = [];
   const icons: Record<string, string> = {};
+  const colors: Record<string, string> = {};
   const priorities: Record<string, number> = {};
 
   for (const raw of rawMarkers) {
@@ -197,13 +219,16 @@ function parseRawMarkers(rawMarkers: RawMarker[]): {
       if (raw.icon !== undefined) {
         icons[raw.marker] = raw.icon;
       }
+      if (raw.color !== undefined) {
+        colors[raw.marker] = raw.color;
+      }
       if (raw.priority !== undefined) {
         priorities[raw.marker] = raw.priority;
       }
     }
   }
 
-  return { markers, icons, priorities };
+  return { markers, icons, colors, priorities };
 }
 
 /**
@@ -213,12 +238,14 @@ function mergeConfig(raw: Partial<RawConfig>): PjConfig {
   // Parse markers from raw config if provided
   let markers = DEFAULT_CONFIG.markers;
   let parsedIcons: Record<string, string> = {};
+  let parsedColors: Record<string, string> = {};
   let parsedPriorities: Record<string, number> = {};
 
   if (raw.markers !== undefined) {
     const parsed = parseRawMarkers(raw.markers);
     markers = parsed.markers;
     parsedIcons = parsed.icons;
+    parsedColors = parsed.colors;
     parsedPriorities = parsed.priorities;
   }
 
@@ -228,6 +255,14 @@ function mergeConfig(raw: Partial<RawConfig>): PjConfig {
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
     ...(raw.icons ?? {}),
     ...parsedIcons,
+  };
+
+  // Merge colors: defaults <- deprecated colors field <- new format colors
+  const colors = {
+    ...DEFAULT_CONFIG.colors,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- support legacy format
+    ...(raw.colors ?? {}),
+    ...parsedColors,
   };
 
   // Merge priorities: defaults <- deprecated priorities field <- new format priorities
@@ -247,6 +282,7 @@ function mergeConfig(raw: Partial<RawConfig>): PjConfig {
     noIgnore: raw.no_ignore ?? DEFAULT_CONFIG.noIgnore,
     noNested: raw.no_nested ?? DEFAULT_CONFIG.noNested,
     icons,
+    colors,
     priorities,
   };
 }

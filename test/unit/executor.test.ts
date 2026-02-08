@@ -71,7 +71,7 @@ describe("CLI Executor", () => {
       const output = JSON.stringify({
         projects: [
           { path: "/foo/bar", name: "bar", marker: ".git" },
-          { path: "/foo/baz", name: "baz", marker: "package.json", icon: " " },
+          { path: "/foo/baz", name: "baz", marker: "package.json", icon: " ", color: "green" },
         ],
       });
 
@@ -83,6 +83,7 @@ describe("CLI Executor", () => {
         name: "bar",
         marker: ".git",
         icon: undefined,
+        color: undefined,
         priority: undefined,
       });
       expect(projects[1]).toEqual({
@@ -90,6 +91,7 @@ describe("CLI Executor", () => {
         name: "baz",
         marker: "package.json",
         icon: " ",
+        color: "green",
         priority: undefined,
       });
     });
@@ -108,6 +110,7 @@ describe("CLI Executor", () => {
         name: "bar",
         marker: ".git",
         icon: undefined,
+        color: undefined,
         priority: undefined,
       });
     });
