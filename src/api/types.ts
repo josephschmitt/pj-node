@@ -12,6 +12,8 @@ export interface Project {
   marker: string;
   /** Optional icon for the marker (Nerd Font) */
   icon: string | undefined;
+  /** Optional icon with ANSI color codes applied (when --icons is used) */
+  ansiIcon: string | undefined;
   /** Optional color name for the marker icon (e.g., "cyan", "bright-red") */
   color: string | undefined;
   /** Priority of the marker (higher = more specific) */
