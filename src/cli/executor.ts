@@ -84,6 +84,7 @@ interface PjJsonProject {
   name: string;
   marker: string;
   icon?: string;
+  ansiIcon?: string;
   color?: string;
 }
 
@@ -117,6 +118,7 @@ export function parseJsonOutput(output: string): Project[] {
       name: p.name,
       marker: p.marker,
       icon: p.icon,
+      ansiIcon: p.ansiIcon,
       color: p.color,
       priority: undefined,  // not included in JSON output
     }));

@@ -89,6 +89,7 @@ describe("CLI Executor", () => {
         marker: ".git",
         displayPath: undefined,
         icon: undefined,
+        ansiIcon: undefined,
         color: undefined,
         priority: undefined,
       });
@@ -98,6 +99,7 @@ describe("CLI Executor", () => {
         marker: "package.json",
         displayPath: undefined,
         icon: " ",
+        ansiIcon: undefined,
         color: "green",
         priority: undefined,
       });
@@ -120,6 +122,7 @@ describe("CLI Executor", () => {
         marker: ".git",
         displayPath: "~/bar",
         icon: undefined,
+        ansiIcon: undefined,
         color: undefined,
         priority: undefined,
       });
@@ -129,7 +132,30 @@ describe("CLI Executor", () => {
         marker: "package.json",
         displayPath: "~/baz",
         icon: undefined,
+        ansiIcon: undefined,
         color: undefined,
+        priority: undefined,
+      });
+    });
+
+    it("should parse ansiIcon when present in JSON output", () => {
+      const output = JSON.stringify({
+        projects: [
+          { path: "/foo/bar", name: "bar", marker: ".git", icon: " ", ansiIcon: "\x1b[36m \x1b[0m", color: "cyan" },
+        ],
+      });
+
+      const projects = parseJsonOutput(output);
+
+      expect(projects).toHaveLength(1);
+      expect(projects[0]).toEqual({
+        path: "/foo/bar",
+        name: "bar",
+        marker: ".git",
+        displayPath: undefined,
+        icon: " ",
+        ansiIcon: "\x1b[36m \x1b[0m",
+        color: "cyan",
         priority: undefined,
       });
     });
@@ -149,6 +175,7 @@ describe("CLI Executor", () => {
         marker: ".git",
         displayPath: undefined,
         icon: undefined,
+        ansiIcon: undefined,
         color: undefined,
         priority: undefined,
       });
