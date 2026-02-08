@@ -57,6 +57,10 @@ export function buildArgs(options?: DiscoverOptions): string[] {
     args.push("--icons");
   }
 
+  if (options?.shorten) {
+    args.push("--shorten");
+  }
+
   if (options?.configPath) {
     args.push("--config", options.configPath);
   }
@@ -76,6 +80,7 @@ export function buildArgs(options?: DiscoverOptions): string[] {
  */
 interface PjJsonProject {
   path: string;
+  displayPath?: string;
   name: string;
   marker: string;
   icon?: string;
@@ -108,6 +113,7 @@ export function parseJsonOutput(output: string): Project[] {
 
     return projects.map((p) => ({
       path: p.path,
+      displayPath: p.displayPath,
       name: p.name,
       marker: p.marker,
       icon: p.icon,
