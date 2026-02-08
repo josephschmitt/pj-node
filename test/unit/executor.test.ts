@@ -54,6 +54,11 @@ describe("CLI Executor", () => {
       expect(args).toContain("--icons");
     });
 
+    it("should add --shorten flag when set", () => {
+      const args = buildArgs({ shorten: true });
+      expect(args).toContain("--shorten");
+    });
+
     it("should add --config flag when configPath is set", () => {
       const args = buildArgs({ configPath: "/custom/config.yaml" });
       expect(args).toContain("--config");
@@ -82,6 +87,7 @@ describe("CLI Executor", () => {
         path: "/foo/bar",
         name: "bar",
         marker: ".git",
+        displayPath: undefined,
         icon: undefined,
         color: undefined,
         priority: undefined,
@@ -90,8 +96,40 @@ describe("CLI Executor", () => {
         path: "/foo/baz",
         name: "baz",
         marker: "package.json",
+        displayPath: undefined,
         icon: " ",
         color: "green",
+        priority: undefined,
+      });
+    });
+
+    it("should parse displayPath when present in JSON output", () => {
+      const output = JSON.stringify({
+        projects: [
+          { path: "/home/user/bar", name: "bar", marker: ".git", displayPath: "~/bar" },
+          { path: "/home/user/baz", name: "baz", marker: "package.json", displayPath: "~/baz" },
+        ],
+      });
+
+      const projects = parseJsonOutput(output);
+
+      expect(projects).toHaveLength(2);
+      expect(projects[0]).toEqual({
+        path: "/home/user/bar",
+        name: "bar",
+        marker: ".git",
+        displayPath: "~/bar",
+        icon: undefined,
+        color: undefined,
+        priority: undefined,
+      });
+      expect(projects[1]).toEqual({
+        path: "/home/user/baz",
+        name: "baz",
+        marker: "package.json",
+        displayPath: "~/baz",
+        icon: undefined,
+        color: undefined,
         priority: undefined,
       });
     });
@@ -109,6 +147,7 @@ describe("CLI Executor", () => {
         path: "/foo/bar",
         name: "bar",
         marker: ".git",
+        displayPath: undefined,
         icon: undefined,
         color: undefined,
         priority: undefined,

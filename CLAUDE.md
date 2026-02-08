@@ -64,6 +64,10 @@ Fully automated publishing pipeline:
 2. pj releases new version → Sync workflow creates version PR (requires manual review)
 3. Publish workflow publishes to npm with OIDC provenance
 
+### Sync Branches
+
+When a new pj CLI version is released, CI automatically creates a `sync-pj-X.Y` branch and PR that bumps `PJ_TARGET_VERSION` and `package.json` version. When adding support for new pj CLI features, check out the existing sync branch (e.g., `git fetch origin sync-pj-1.10 && git checkout sync-pj-1.10`) and commit API changes on top of it rather than starting from `main`.
+
 ## Pre-push Hook
 
 Husky runs lint, type-check, and tests before every push.

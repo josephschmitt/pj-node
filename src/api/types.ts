@@ -4,6 +4,8 @@
 export interface Project {
   /** Absolute path to the project directory */
   path: string;
+  /** Display path (with ~ for home directory when --shorten is used) */
+  displayPath: string | undefined;
   /** Name of the project (directory name) */
   name: string;
   /** The marker file/directory that identified this as a project */
@@ -36,6 +38,8 @@ export interface DiscoverOptions {
   noCache?: boolean;
   /** Include icons in output */
   icons?: boolean;
+  /** Replace home directory with ~ in output paths */
+  shorten?: boolean;
   /** Custom config file path */
   configPath?: string;
   /** Enable verbose/debug output */
