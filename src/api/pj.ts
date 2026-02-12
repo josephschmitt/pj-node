@@ -232,6 +232,12 @@ export class Pj {
     if (options?.icons !== undefined) {
       merged.icons = options.icons;
     }
+    if (options?.shorten !== undefined) {
+      merged.shorten = options.shorten;
+    }
+    if (options?.format !== undefined) {
+      merged.format = options.format;
+    }
     if (options?.noCache !== undefined) {
       merged.noCache = options.noCache;
     }
