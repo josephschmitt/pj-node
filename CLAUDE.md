@@ -64,9 +64,19 @@ Fully automated publishing pipeline:
 2. pj releases new version → Sync workflow creates version PR (requires manual review)
 3. Publish workflow publishes to npm with OIDC provenance
 
-### Sync Branches
+### Sync Workflow for New pj Versions
 
-When a new pj CLI version is released, CI automatically creates a `sync-pj-X.Y` branch and PR that bumps `PJ_TARGET_VERSION` and `package.json` version. When adding support for new pj CLI features, check out the existing sync branch (e.g., `git fetch origin sync-pj-1.10 && git checkout sync-pj-1.10`) and commit API changes on top of it rather than starting from `main`.
+When a new pj CLI version is released, CI automatically creates a `sync-pj-X.Y` branch and PR. To add support for new features:
+
+1. **Check out the sync branch**: `git fetch origin && git checkout sync-pj-X.Y`
+2. **Review pj release notes**: `gh release view vX.Y.0 --repo josephschmitt/pj`
+3. **Update TypeScript API** for new features:
+   - New CLI flags → Add to `DiscoverOptions` in `src/api/types.ts`, then update `buildArgs()` in `src/cli/executor.ts`, `discoverFromPaths()` in `src/api/discover.ts`, and `mergeOptions()` in `src/api/pj.ts`
+   - New JSON output fields → Add to `Project` interface in `src/api/types.ts`, then update `PjJsonProject` and `parseJsonOutput()` in `src/cli/executor.ts`
+4. **Add tests** in `test/unit/executor.test.ts`
+5. **Run checks**: `npm test && npm run type-check && npm run lint`
+6. **Commit and push**: Use `feat: support pj vX.Y.0 features` message
+7. **Update PR description**: `gh pr edit <number> --body "..."` to list the API changes made
 
 ## Pre-push Hook
 
