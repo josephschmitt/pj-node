@@ -36,6 +36,8 @@ export async function discoverFromPaths(
   if (options?.nested !== undefined) optsWithoutPaths.nested = options.nested;
   if (options?.noCache !== undefined) optsWithoutPaths.noCache = options.noCache;
   if (options?.icons !== undefined) optsWithoutPaths.icons = options.icons;
+  if (options?.shorten !== undefined) optsWithoutPaths.shorten = options.shorten;
+  if (options?.format !== undefined) optsWithoutPaths.format = options.format;
   if (options?.configPath !== undefined) optsWithoutPaths.configPath = options.configPath;
   if (options?.verbose !== undefined) optsWithoutPaths.verbose = options.verbose;
 

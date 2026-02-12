@@ -59,6 +59,12 @@ describe("CLI Executor", () => {
       expect(args).toContain("--shorten");
     });
 
+    it("should add --format flag when set", () => {
+      const args = buildArgs({ format: "{{ .Name }}: {{ .Path }}" });
+      expect(args).toContain("--format");
+      expect(args).toContain("{{ .Name }}: {{ .Path }}");
+    });
+
     it("should add --config flag when configPath is set", () => {
       const args = buildArgs({ configPath: "/custom/config.yaml" });
       expect(args).toContain("--config");
@@ -88,6 +94,8 @@ describe("CLI Executor", () => {
         name: "bar",
         marker: ".git",
         displayPath: undefined,
+        label: undefined,
+        displayLabel: undefined,
         icon: undefined,
         ansiIcon: undefined,
         color: undefined,
@@ -98,6 +106,8 @@ describe("CLI Executor", () => {
         name: "baz",
         marker: "package.json",
         displayPath: undefined,
+        label: undefined,
+        displayLabel: undefined,
         icon: " ",
         ansiIcon: undefined,
         color: "green",
@@ -121,6 +131,8 @@ describe("CLI Executor", () => {
         name: "bar",
         marker: ".git",
         displayPath: "~/bar",
+        label: undefined,
+        displayLabel: undefined,
         icon: undefined,
         ansiIcon: undefined,
         color: undefined,
@@ -131,6 +143,8 @@ describe("CLI Executor", () => {
         name: "baz",
         marker: "package.json",
         displayPath: "~/baz",
+        label: undefined,
+        displayLabel: undefined,
         icon: undefined,
         ansiIcon: undefined,
         color: undefined,
@@ -153,9 +167,35 @@ describe("CLI Executor", () => {
         name: "bar",
         marker: ".git",
         displayPath: undefined,
+        label: undefined,
+        displayLabel: undefined,
         icon: " ",
         ansiIcon: "\x1b[36m \x1b[0m",
         color: "cyan",
+        priority: undefined,
+      });
+    });
+
+    it("should parse label and displayLabel when present in JSON output", () => {
+      const output = JSON.stringify({
+        projects: [
+          { path: "/foo/bar", name: "bar", marker: ".git", label: "Git", displayLabel: "\x1b[36mGit\x1b[0m" },
+        ],
+      });
+
+      const projects = parseJsonOutput(output);
+
+      expect(projects).toHaveLength(1);
+      expect(projects[0]).toEqual({
+        path: "/foo/bar",
+        name: "bar",
+        marker: ".git",
+        displayPath: undefined,
+        label: "Git",
+        displayLabel: "\x1b[36mGit\x1b[0m",
+        icon: undefined,
+        ansiIcon: undefined,
+        color: undefined,
         priority: undefined,
       });
     });
@@ -174,6 +214,8 @@ describe("CLI Executor", () => {
         name: "bar",
         marker: ".git",
         displayPath: undefined,
+        label: undefined,
+        displayLabel: undefined,
         icon: undefined,
         ansiIcon: undefined,
         color: undefined,

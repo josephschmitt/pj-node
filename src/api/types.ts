@@ -10,6 +10,10 @@ export interface Project {
   name: string;
   /** The marker file/directory that identified this as a project */
   marker: string;
+  /** Optional label for the marker (human-readable name) */
+  label: string | undefined;
+  /** Optional label with ANSI color codes applied (when --icons is used) */
+  displayLabel: string | undefined;
   /** Optional icon for the marker (Nerd Font) */
   icon: string | undefined;
   /** Optional icon with ANSI color codes applied (when --icons is used) */
@@ -42,6 +46,8 @@ export interface DiscoverOptions {
   icons?: boolean;
   /** Replace home directory with ~ in output paths */
   shorten?: boolean;
+  /** Custom output format template (Go template syntax) */
+  format?: string;
   /** Custom config file path */
   configPath?: string;
   /** Enable verbose/debug output */

@@ -61,6 +61,10 @@ export function buildArgs(options?: DiscoverOptions): string[] {
     args.push("--shorten");
   }
 
+  if (options?.format) {
+    args.push("--format", options.format);
+  }
+
   if (options?.configPath) {
     args.push("--config", options.configPath);
   }
@@ -83,6 +87,8 @@ interface PjJsonProject {
   displayPath?: string;
   name: string;
   marker: string;
+  label?: string;
+  displayLabel?: string;
   icon?: string;
   ansiIcon?: string;
   color?: string;
@@ -117,6 +123,8 @@ export function parseJsonOutput(output: string): Project[] {
       displayPath: p.displayPath,
       name: p.name,
       marker: p.marker,
+      label: p.label,
+      displayLabel: p.displayLabel,
       icon: p.icon,
       ansiIcon: p.ansiIcon,
       color: p.color,
