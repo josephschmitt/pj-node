@@ -9,7 +9,7 @@ import * as os from "node:os";
  * IMPORTANT: When pj releases a new minor version (e.g., 1.5.0),
  * this package must also release a new minor version to match.
  */
-export const PJ_TARGET_VERSION = "1.11";
+export const PJ_TARGET_VERSION = "1.12";
 
 /** GitHub repository owner */
 export const GITHUB_OWNER = "josephschmitt";
