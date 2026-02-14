@@ -61,6 +61,14 @@ export function buildArgs(options?: DiscoverOptions): string[] {
     args.push("--shorten");
   }
 
+  if (options?.sort) {
+    args.push("--sort", options.sort);
+  }
+
+  if (options?.sortDirection) {
+    args.push("--sort-direction", options.sortDirection);
+  }
+
   if (options?.format) {
     args.push("--format", options.format);
   }

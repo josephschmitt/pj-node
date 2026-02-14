@@ -59,6 +59,26 @@ describe("CLI Executor", () => {
       expect(args).toContain("--shorten");
     });
 
+    it("should add --sort flag when set", () => {
+      const args = buildArgs({ sort: "alpha" });
+      expect(args).toContain("--sort");
+      expect(args).toContain("alpha");
+    });
+
+    it("should add --sort-direction flag when set", () => {
+      const args = buildArgs({ sortDirection: "asc" });
+      expect(args).toContain("--sort-direction");
+      expect(args).toContain("asc");
+    });
+
+    it("should add both --sort and --sort-direction flags together", () => {
+      const args = buildArgs({ sort: "label", sortDirection: "desc" });
+      expect(args).toContain("--sort");
+      expect(args).toContain("label");
+      expect(args).toContain("--sort-direction");
+      expect(args).toContain("desc");
+    });
+
     it("should add --format flag when set", () => {
       const args = buildArgs({ format: "{{ .Name }}: {{ .Path }}" });
       expect(args).toContain("--format");
