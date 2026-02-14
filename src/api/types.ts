@@ -46,6 +46,10 @@ export interface DiscoverOptions {
   icons?: boolean;
   /** Replace home directory with ~ in output paths */
   shorten?: boolean;
+  /** Sort order for results: "alpha", "priority" (default), or "label" */
+  sort?: "alpha" | "priority" | "label";
+  /** Sort direction: "asc" or "desc" (defaults vary by sort mode) */
+  sortDirection?: "asc" | "desc";
   /** Custom output format template (Go template syntax) */
   format?: string;
   /** Custom config file path */
