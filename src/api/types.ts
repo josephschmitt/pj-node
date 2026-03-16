@@ -22,6 +22,10 @@ export interface Project {
   color: string | undefined;
   /** Priority of the marker (higher = more specific) */
   priority: number | undefined;
+  /** Whether this project is a git worktree */
+  isWorktree: boolean | undefined;
+  /** Path to the parent repository if this is a worktree */
+  worktreeParent: string | undefined;
 }
 
 /**
@@ -50,6 +54,8 @@ export interface DiscoverOptions {
   sort?: "alpha" | "priority" | "label";
   /** Sort direction: "asc" or "desc" (defaults vary by sort mode) */
   sortDirection?: "asc" | "desc";
+  /** Control git worktree discovery: true = actively discover worktrees, false = filter out worktrees, undefined = default behavior */
+  worktrees?: boolean;
   /** Custom output format template (Go template syntax) */
   format?: string;
   /** Custom config file path */

@@ -69,6 +69,12 @@ export function buildArgs(options?: DiscoverOptions): string[] {
     args.push("--sort-direction", options.sortDirection);
   }
 
+  if (options?.worktrees === true) {
+    args.push("--worktrees");
+  } else if (options?.worktrees === false) {
+    args.push("--no-worktrees");
+  }
+
   if (options?.format) {
     args.push("--format", options.format);
   }
@@ -100,6 +106,8 @@ interface PjJsonProject {
   icon?: string;
   ansiIcon?: string;
   color?: string;
+  isWorktree?: boolean;
+  worktreeParent?: string;
 }
 
 interface PjJsonOutput {
@@ -137,6 +145,8 @@ export function parseJsonOutput(output: string): Project[] {
       ansiIcon: p.ansiIcon,
       color: p.color,
       priority: undefined,  // not included in JSON output
+      isWorktree: p.isWorktree,
+      worktreeParent: p.worktreeParent,
     }));
   } catch (error) {
     if (error instanceof PjExecutionError) {

@@ -95,6 +95,24 @@ describe("CLI Executor", () => {
       const args = buildArgs({ verbose: true });
       expect(args).toContain("--verbose");
     });
+
+    it("should add --worktrees flag when worktrees is true", () => {
+      const args = buildArgs({ worktrees: true });
+      expect(args).toContain("--worktrees");
+      expect(args).not.toContain("--no-worktrees");
+    });
+
+    it("should add --no-worktrees flag when worktrees is false", () => {
+      const args = buildArgs({ worktrees: false });
+      expect(args).toContain("--no-worktrees");
+      expect(args).not.toContain("--worktrees");
+    });
+
+    it("should not add worktree flags when worktrees is undefined", () => {
+      const args = buildArgs({});
+      expect(args).not.toContain("--worktrees");
+      expect(args).not.toContain("--no-worktrees");
+    });
   });
 
   describe("parseJsonOutput", () => {
@@ -120,6 +138,8 @@ describe("CLI Executor", () => {
         ansiIcon: undefined,
         color: undefined,
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
       expect(projects[1]).toEqual({
         path: "/foo/baz",
@@ -132,6 +152,8 @@ describe("CLI Executor", () => {
         ansiIcon: undefined,
         color: "green",
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
     });
 
@@ -157,6 +179,8 @@ describe("CLI Executor", () => {
         ansiIcon: undefined,
         color: undefined,
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
       expect(projects[1]).toEqual({
         path: "/home/user/baz",
@@ -169,6 +193,8 @@ describe("CLI Executor", () => {
         ansiIcon: undefined,
         color: undefined,
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
     });
 
@@ -193,6 +219,8 @@ describe("CLI Executor", () => {
         ansiIcon: "\x1b[36m \x1b[0m",
         color: "cyan",
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
     });
 
@@ -217,6 +245,8 @@ describe("CLI Executor", () => {
         ansiIcon: undefined,
         color: undefined,
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
     });
 
@@ -240,6 +270,8 @@ describe("CLI Executor", () => {
         ansiIcon: undefined,
         color: undefined,
         priority: undefined,
+        isWorktree: undefined,
+        worktreeParent: undefined,
       });
     });
 
@@ -262,6 +294,47 @@ describe("CLI Executor", () => {
       expect(() => parseJsonOutput(JSON.stringify("string"))).toThrow(
         "Unexpected pj output format"
       );
+    });
+
+    it("should parse isWorktree and worktreeParent when present in JSON output", () => {
+      const output = JSON.stringify({
+        projects: [
+          { path: "/foo/bar", name: "bar", marker: ".git", isWorktree: true, worktreeParent: "/foo/main" },
+          { path: "/foo/baz", name: "baz", marker: ".git", isWorktree: false },
+        ],
+      });
+
+      const projects = parseJsonOutput(output);
+
+      expect(projects).toHaveLength(2);
+      expect(projects[0]).toEqual({
+        path: "/foo/bar",
+        name: "bar",
+        marker: ".git",
+        displayPath: undefined,
+        label: undefined,
+        displayLabel: undefined,
+        icon: undefined,
+        ansiIcon: undefined,
+        color: undefined,
+        priority: undefined,
+        isWorktree: true,
+        worktreeParent: "/foo/main",
+      });
+      expect(projects[1]).toEqual({
+        path: "/foo/baz",
+        name: "baz",
+        marker: ".git",
+        displayPath: undefined,
+        label: undefined,
+        displayLabel: undefined,
+        icon: undefined,
+        ansiIcon: undefined,
+        color: undefined,
+        priority: undefined,
+        isWorktree: false,
+        worktreeParent: undefined,
+      });
     });
   });
 });

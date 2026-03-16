@@ -235,6 +235,9 @@ export class Pj {
     if (options?.shorten !== undefined) {
       merged.shorten = options.shorten;
     }
+    if (options?.worktrees !== undefined) {
+      merged.worktrees = options.worktrees;
+    }
     if (options?.format !== undefined) {
       merged.format = options.format;
     }
